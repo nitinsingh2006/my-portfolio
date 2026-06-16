@@ -1,4 +1,4 @@
-import { getGitHubStats } from "@/lib/github";
+import { getGitHubStats, getContributions } from "@/lib/github";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
@@ -14,7 +14,7 @@ import { Footer } from "@/components/Footer";
 export const revalidate = 1200;
 
 export default async function Home() {
-  const stats = await getGitHubStats();
+  const [stats, contributions] = await Promise.all([getGitHubStats(), getContributions()]);
 
   return (
     <>
@@ -26,7 +26,7 @@ export default async function Home() {
         <Flagship />
         <TechStack />
         <Timeline />
-        <GitHubSection stats={stats} />
+        <GitHubSection stats={stats} contributions={contributions} />
         <Contact />
       </main>
       <Footer />

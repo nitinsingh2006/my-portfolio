@@ -10,6 +10,12 @@ export type RepoSummary = {
   updatedAt: string;
 };
 
+export type ContribDay = { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 };
+export type Contributions = {
+  total: number;
+  weeks: ContribDay[][];
+};
+
 export type GitHubStats = {
   repos: number;
   followers: number;
@@ -113,5 +119,63 @@ export async function getGitHubStats(): Promise<GitHubStats> {
     };
   } catch {
     return fallback;
+  }
+}
+
+const LEVEL_MAP: Record<string, 0 | 1 | 2 | 3 | 4> = {
+  NONE: 0,
+  FIRST_QUARTILE: 1,
+  SECOND_QUARTILE: 2,
+  THIRD_QUARTILE: 3,
+  FOURTH_QUARTILE: 4,
+};
+
+/**
+ * Real contribution calendar via the GitHub GraphQL API. Requires GITHUB_TOKEN
+ * (GraphQL is authenticated-only). Returns null when no token is set or the call
+ * fails — callers fall back to the third-party chart image.
+ */
+export async function getContributions(): Promise<Contributions | null> {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return null;
+
+  const query = `query($login:String!){
+    user(login:$login){
+      contributionsCollection{
+        contributionCalendar{
+          totalContributions
+          weeks{ contributionDays{ date contributionCount contributionLevel } }
+        }
+      }
+    }
+  }`;
+
+  try {
+    const res = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, variables: { login: site.githubUser } }),
+      next: { revalidate: 1200 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const cal = json?.data?.user?.contributionsCollection?.contributionCalendar;
+    if (!cal) return null;
+
+    const weeks: ContribDay[][] = cal.weeks.map(
+      (w: { contributionDays: { date: string; contributionCount: number; contributionLevel: string }[] }) =>
+        w.contributionDays.map((d) => ({
+          date: d.date,
+          count: d.contributionCount,
+          level: LEVEL_MAP[d.contributionLevel] ?? 0,
+        })),
+    );
+
+    return { total: cal.totalContributions ?? 0, weeks };
+  } catch {
+    return null;
   }
 }

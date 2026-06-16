@@ -1,8 +1,16 @@
 import { Github, GitBranch, Users, Calendar, Star, GitFork, ArrowUpRight } from "lucide-react";
 import { site } from "@/data/site";
-import type { GitHubStats } from "@/lib/github";
+import type { GitHubStats, Contributions } from "@/lib/github";
 import { SectionHeading } from "./SectionHeading";
 import { Reveal, RevealGroup, RevealItem } from "./Reveal";
+
+const LEVEL_BG: Record<number, string> = {
+  0: "bg-surface-2",
+  1: "bg-accent/25",
+  2: "bg-accent/50",
+  3: "bg-accent/75",
+  4: "bg-accent",
+};
 
 const langColor: Record<string, string> = {
   TypeScript: "#3178c6",
@@ -27,7 +35,13 @@ function relativeTime(iso: string): string {
   return `${Math.floor(months / 12)}y ago`;
 }
 
-export function GitHubSection({ stats }: { stats: GitHubStats }) {
+export function GitHubSection({
+  stats,
+  contributions,
+}: {
+  stats: GitHubStats;
+  contributions: Contributions | null;
+}) {
   const statItems = [
     { icon: GitBranch, k: `${stats.repos}`, v: "Public repositories" },
     { icon: Star, k: `${stats.totalStars}`, v: "Stars earned" },
@@ -154,22 +168,56 @@ export function GitHubSection({ stats }: { stats: GitHubStats }) {
           </div>
         )}
 
-        {/* Contribution graph (no API key required) — cache-busted per 20-min window */}
+        {/* Contribution activity — self-rendered dark heatmap from the GitHub GraphQL
+            API (real data, on-brand). Falls back to the ghchart image if no token. */}
         <Reveal className="mt-5 card overflow-hidden p-6">
-          <h3 className="font-display font-semibold">Contribution activity</h3>
-          <p className="mt-1 text-xs text-muted">Public contributions over the past year</p>
-          <div className="mt-5 overflow-x-auto">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://ghchart.rshah.org/a87cff/${site.githubUser}?v=${Math.floor(Date.now() / 1_200_000)}`}
-              alt={`GitHub contribution graph for ${site.githubUser}`}
-              loading="lazy"
-              decoding="async"
-              width={840}
-              height={128}
-              className="min-w-[640px]"
-            />
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="font-display font-semibold">Contribution activity</h3>
+            {contributions && (
+              <span className="font-mono text-xs text-muted">
+                <span className="text-accent">{contributions.total}</span> contributions in the last year
+              </span>
+            )}
           </div>
+          <p className="mt-1 text-xs text-muted">Public contributions over the past year</p>
+
+          {contributions ? (
+            <>
+              <div className="mt-5 overflow-x-auto pb-1">
+                <div className="grid grid-flow-col grid-rows-7 gap-[3px]">
+                  {contributions.weeks.flatMap((week) =>
+                    week.map((day) => (
+                      <div
+                        key={day.date}
+                        title={`${day.count} contribution${day.count === 1 ? "" : "s"} on ${day.date}`}
+                        className={`h-[11px] w-[11px] rounded-[2px] ${LEVEL_BG[day.level]}`}
+                      />
+                    )),
+                  )}
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted">
+                <span>Less</span>
+                {[0, 1, 2, 3, 4].map((l) => (
+                  <span key={l} className={`h-[11px] w-[11px] rounded-[2px] ${LEVEL_BG[l]}`} />
+                ))}
+                <span>More</span>
+              </div>
+            </>
+          ) : (
+            <div className="mt-5 overflow-x-auto">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://ghchart.rshah.org/a87cff/${site.githubUser}?v=${Math.floor(Date.now() / 1_200_000)}`}
+                alt={`GitHub contribution graph for ${site.githubUser}`}
+                loading="lazy"
+                decoding="async"
+                width={840}
+                height={128}
+                className="min-w-[640px]"
+              />
+            </div>
+          )}
         </Reveal>
       </div>
     </section>
