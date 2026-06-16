@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Channel triplets so Tailwind can apply /alpha modifiers via rgb(var(--x) / <alpha-value>). */
+  /* Brand palette inherited from the deployed portfolio: violet on near-black. */
+  --bg: 11 8 12; /* #0b080c */
+  --surface: 18 14 22; /* #120e16 */
+  --surface-2: 26 20 32; /* #1a1420 */
+  --border: 42 34 50; /* #2a2232 */
+  --muted: 156 146 168; /* #9c92a8 */
+  --fg: 234 229 236; /* #eae5ec */
+  --accent: 194 164 255; /* violet #c2a4ff */
+  --accent-2: 168 124 255; /* violet-deep #a87cff */
+}
+
+* {
+  border-color: rgb(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-feature-settings: "ss01", "cv01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Selection */
+::selection {
+  background: rgb(var(--accent) / 0.3);
+  color: rgb(var(--fg));
+}
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Custom scrollbar (desktop) */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--bg));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--border));
+    border-radius: 99px;
+    border: 2px solid rgb(var(--bg));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--accent) / 0.4);
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-content px-5 sm:px-6 lg:px-8;
+  }
+
+  .section {
+    @apply scroll-mt-24 py-20 sm:py-28;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-accent;
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-surface/60 backdrop-blur-sm;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-border bg-surface-2 px-2.5 py-1 font-mono text-[11px] text-muted;
+  }
+
+  .link-underline {
+    @apply relative inline-flex items-center gap-1.5 text-muted transition-colors hover:text-fg;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(
+      100deg,
+      rgb(var(--fg)) 30%,
+      rgb(var(--accent)) 75%,
+      rgb(var(--accent-2))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  .glow {
+    background: radial-gradient(
+      600px circle at 50% -10%,
+      rgb(var(--accent) / 0.22),
+      transparent 60%
+    );
+  }
+
+  /* Soft drifting violet aurora for hero/section ambience. */
+  .aurora {
+    background:
+      radial-gradient(40% 50% at 75% 20%, rgb(var(--accent-2) / 0.18), transparent 70%),
+      radial-gradient(45% 55% at 20% 30%, rgb(var(--accent) / 0.16), transparent 70%);
+    filter: blur(8px);
+  }
+
+  /* Subtle conic ring used behind the robot. */
+  .conic-ring {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgb(var(--accent) / 0.55) 90deg,
+      transparent 180deg,
+      rgb(var(--accent-2) / 0.45) 270deg,
+      transparent 360deg
+    );
+  }
+
+  .text-glow {
+    text-shadow: 0 0 28px rgb(var(--accent) / 0.35);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-spin-slow {
+    animation: spin-slow 16s linear infinite;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Intro loader: expanding-circle reveal, echoing the deployed portfolio. */
+@keyframes loader-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes loader-out {
+  to {
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Print: clean, ATS-friendly A4 résumé */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .resume-doc,
+  .resume-doc * {
+    box-shadow: none !important;
+  }
+  .resume-doc {
+    border-color: #d4d4d8 !important;
+  }
+  .resume-doc section {
+    break-inside: avoid;
+  }
+}
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
