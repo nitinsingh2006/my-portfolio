@@ -42,7 +42,7 @@ export function GitHubSection({ stats }: { stats: GitHubStats }) {
           <SectionHeading
             eyebrow="Open source"
             title="Building in the open."
-            description="Live from the GitHub API — refreshed hourly."
+            description="Live from the GitHub API — refreshed every 20 minutes."
           />
           <a
             href={site.socials.github}
@@ -154,14 +154,14 @@ export function GitHubSection({ stats }: { stats: GitHubStats }) {
           </div>
         )}
 
-        {/* Contribution graph (no API key required) */}
+        {/* Contribution graph (no API key required) — cache-busted per 20-min window */}
         <Reveal className="mt-5 card overflow-hidden p-6">
           <h3 className="font-display font-semibold">Contribution activity</h3>
           <p className="mt-1 text-xs text-muted">Public contributions over the past year</p>
           <div className="mt-5 overflow-x-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`https://ghchart.rshah.org/a87cff/${site.githubUser}`}
+              src={`https://ghchart.rshah.org/a87cff/${site.githubUser}?v=${Math.floor(Date.now() / 1_200_000)}`}
               alt={`GitHub contribution graph for ${site.githubUser}`}
               loading="lazy"
               decoding="async"

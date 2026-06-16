@@ -10,8 +10,8 @@ import { GitHubSection } from "@/components/GitHubSection";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 
-// Revalidate the page (and its GitHub data) hourly.
-export const revalidate = 3600;
+// Revalidate the page (and its GitHub data) every 20 minutes.
+export const revalidate = 1200;
 
 export default async function Home() {
   const stats = await getGitHubStats();

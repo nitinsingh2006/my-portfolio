@@ -28,3 +28,6 @@ yarn-error.log*
 
 # recovered raw bundles (kept locally for reference, not needed to build)
 # docs/_recovered/ is intentionally tracked for the recovery report
+
+.vercel
+.env*.local

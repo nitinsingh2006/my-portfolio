@@ -23,7 +23,7 @@ export type GitHubStats = {
 const GITHUB_API = "https://api.github.com";
 
 /**
- * Server-side GitHub stats. Cached with ISR (revalidate hourly).
+ * Server-side GitHub stats. Cached with ISR (revalidate every 20 minutes).
  * Degrades gracefully: if the API is unavailable or rate-limited, returns
  * sensible fallbacks so the page still renders fully.
  */
@@ -51,14 +51,14 @@ export async function getGitHubStats(): Promise<GitHubStats> {
   try {
     const userRes = await fetch(`${GITHUB_API}/users/${site.githubUser}`, {
       headers,
-      next: { revalidate: 3600 },
+      next: { revalidate: 1200 },
     });
     if (!userRes.ok) return fallback;
     const user = await userRes.json();
 
     const reposRes = await fetch(
       `${GITHUB_API}/users/${site.githubUser}/repos?per_page=100&sort=updated`,
-      { headers, next: { revalidate: 3600 } },
+      { headers, next: { revalidate: 1200 } },
     );
     type RawRepo = {
       name: string;
