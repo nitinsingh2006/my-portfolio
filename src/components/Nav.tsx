@@ -43,6 +43,11 @@ export function Nav() {
     return () => observer.disconnect();
   }, []);
 
+  const scrollToContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
@@ -100,6 +105,7 @@ export function Nav() {
           </a>
           <a
             href="#contact"
+            onClick={scrollToContact}
             className="hidden rounded-lg border border-accent/40 bg-accent/10 px-3.5 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20 md:inline-block"
           >
             Get in touch
@@ -140,7 +146,7 @@ export function Nav() {
               <li>
                 <a
                   href="#contact"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => { e.preventDefault(); setOpen(false); setTimeout(() => { document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }, 300); }}
                   className="mt-2 block rounded-lg bg-accent px-3 py-3 text-center text-base font-medium text-black"
                 >
                   Get in touch

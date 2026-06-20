@@ -1,3 +1,5 @@
+"use client";
+
 import { Mail, Github, Linkedin, FileText, ArrowUpRight, MapPin } from "lucide-react";
 import { site } from "@/data/site";
 import { Reveal } from "./Reveal";
@@ -38,6 +40,7 @@ export function Contact() {
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href={site.socials.email}
+              onClick={(e) => { e.preventDefault(); window.location.href = 'mailto:nsingh987610@gmail.com'; }}
               className="group inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-black transition-transform hover:-translate-y-0.5"
             >
               <Mail className="h-4 w-4" />
