@@ -1,3 +1,5 @@
+"use client";
+
 import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import { site } from "@/data/site";
 
@@ -22,19 +24,22 @@ export function Footer() {
           {[
             { href: site.socials.github, icon: Github, label: "GitHub" },
             { href: site.socials.linkedin, icon: Linkedin, label: "LinkedIn" },
-            { href: site.socials.email, icon: Mail, label: "Email" },
-          ].map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              target={s.href.startsWith("http") ? "_blank" : undefined}
-              rel={s.href.startsWith("http") ? "noopener noreferrer" : undefined}
-              aria-label={s.label}
-              className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-accent/50 hover:text-fg"
-            >
-              <s.icon className="h-4 w-4" />
-            </a>
-          ))}
+            { href: `mailto:${site.email}`, icon: Mail, label: "Email" },
+          ].map((s) => {
+            const isExternal = s.href.startsWith("http");
+            return (
+              <a
+                key={s.label}
+                href={s.href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                aria-label={s.label}
+                className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-accent/50 hover:text-fg"
+              >
+                <s.icon className="h-4 w-4" />
+              </a>
+            );
+          })}
           <a
             href="#home"
             aria-label="Back to top"
