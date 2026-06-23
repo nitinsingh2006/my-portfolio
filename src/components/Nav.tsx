@@ -19,6 +19,16 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string>("");
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -55,7 +65,7 @@ export function Nav() {
       }`}
     >
       <nav className="container-page flex h-16 items-center justify-between" aria-label="Primary">
-        <a href="#main" className="group flex items-center gap-2.5 font-display font-semibold">
+        <a href="#home" className="group flex items-center gap-2.5 font-display font-semibold">
           <span className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface font-mono text-sm text-accent transition-colors group-hover:border-accent">
             NS
           </span>
@@ -143,6 +153,35 @@ export function Nav() {
                   </a>
                 </li>
               ))}
+              <li>
+                <a
+                  href="/resume"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg px-3 py-3 text-base text-muted hover:bg-surface hover:text-fg"
+                >
+                  Résumé
+                </a>
+              </li>
+              <li className="mt-2 flex items-center gap-2 px-3">
+                <a
+                  href={site.socials.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GitHub"
+                  className="grid h-10 w-10 place-items-center rounded-lg border border-border text-muted hover:text-fg"
+                >
+                  <Github className="h-4 w-4" />
+                </a>
+                <a
+                  href={site.socials.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="grid h-10 w-10 place-items-center rounded-lg border border-border text-muted hover:text-fg"
+                >
+                  <Linkedin className="h-4 w-4" />
+                </a>
+              </li>
               <li>
                 <a
                   href="#contact"

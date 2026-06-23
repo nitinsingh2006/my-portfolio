@@ -2,7 +2,7 @@ import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import { site } from "@/data/site";
 
 export function Footer() {
-  const year = 2026;
+  const year = new Date().getFullYear();
   return (
     <footer className="border-t border-border">
       <div className="container-page flex flex-col items-center justify-between gap-6 py-10 sm:flex-row">

@@ -183,27 +183,78 @@ body {
   }
 }
 
-/* Print: clean, ATS-friendly A4 résumé */
+/* Print: clean, ATS-friendly single-page A4 résumé */
 @media print {
   @page {
-    margin: 14mm;
+    size: A4 portrait;
+    margin: 10mm 12mm;
   }
   html,
   body {
     background: #fff !important;
+    color: #000 !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  .no-print {
+  /* Hide everything except the resume document */
+  .no-print,
+  header:not(.resume-doc header),
+  footer,
+  nav {
     display: none !important;
   }
-  .resume-doc,
-  .resume-doc * {
+  /* Resume container resets */
+  .resume-doc {
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
     box-shadow: none !important;
   }
-  .resume-doc {
-    border-color: #d4d4d8 !important;
+  .resume-doc * {
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
+  /* Prevent breaks inside sections */
   .resume-doc section {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Tighten all spacing */
+  .resume-doc h2 {
+    margin-top: 6px !important;
+    margin-bottom: 3px !important;
+    padding-bottom: 2px !important;
+    font-size: 9px !important;
+  }
+  .resume-doc h3 {
+    font-size: 11px !important;
+  }
+  .resume-doc p,
+  .resume-doc li,
+  .resume-doc span {
+    font-size: 10.5px !important;
+    line-height: 1.35 !important;
+  }
+  /* Links print as text */
+  .resume-doc a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  /* Ensure page doesn't overflow */
+  main {
+    padding: 0 !important;
+    min-height: auto !important;
+    background: #fff !important;
+  }
+  main > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 }
 

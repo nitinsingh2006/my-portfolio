@@ -65,7 +65,7 @@ export function Hero({ stats }: { stats: GitHubStats }) {
               variants={item}
               className="mt-6 max-w-3xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-[4.1rem]"
             >
-              {site.firstName} Singh —{" "}
+              {site.name} —{" "}
               <span className="text-gradient text-glow">{site.role}</span>
             </motion.h1>
 
