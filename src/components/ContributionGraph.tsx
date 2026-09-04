@@ -25,7 +25,11 @@ export function ContributionGraph({ data }: { data: ContributionsData | null }) 
   const containerRef = useRef<HTMLDivElement>(null);
 
   if (!data || !data.weeks || data.weeks.length === 0) {
-    return null;
+    return (
+      <div className="card p-6 text-center text-sm text-muted">
+        GitHub contribution graph temporarily unavailable.
+      </div>
+    );
   }
 
   const handleDayHoverOrTap = (
@@ -46,7 +50,6 @@ export function ContributionGraph({ data }: { data: ContributionsData | null }) 
       clientY = e.clientY;
     }
 
-    // Relative to graph container
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
@@ -177,11 +180,23 @@ export function ContributionGraph({ data }: { data: ContributionsData | null }) 
           <span>More</span>
         </div>
 
-        {/* Sync indicator & CTA */}
+        {/* Honest Sync indicator & CTA */}
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live GitHub sync active
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                data.source === "live"
+                  ? "bg-emerald-400 animate-pulse"
+                  : data.source === "cached"
+                  ? "bg-amber-400"
+                  : "bg-rose-400"
+              }`}
+            />
+            {data.source === "live"
+              ? "Live GitHub sync active"
+              : data.source === "cached"
+              ? "Using cached GitHub data"
+              : "GitHub data temporarily offline"}
           </span>
           <a
             href={`https://github.com/${site.githubUser}`}

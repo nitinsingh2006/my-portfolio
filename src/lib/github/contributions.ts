@@ -36,15 +36,15 @@ function parseMonthLabels(weeks: ContribWeek[]): MonthLabel[] {
       const monthName = d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
 
       if (monthName !== lastMonth) {
-        // Prevent label overlap if months are too close (e.g. less than 3 columns apart)
         const lastLabel = labels[labels.length - 1];
+        // Ensure at least 3 week columns between labels to avoid text overlap
         if (!lastLabel || weekIdx - lastLabel.weekIndex >= 3) {
           labels.push({ name: monthName, weekIndex: weekIdx });
           lastMonth = monthName;
         }
       }
     } catch {
-      // Ignore date parse error
+      // Ignore invalid date
     }
   });
 
@@ -52,7 +52,7 @@ function parseMonthLabels(weeks: ContribWeek[]): MonthLabel[] {
 }
 
 /**
- * Primary GraphQL fetcher when GITHUB_TOKEN is available.
+ * Primary GraphQL fetcher when GITHUB_TOKEN is present.
  */
 async function fetchViaGraphQL(token: string): Promise<ContributionsData | null> {
   const query = `query($login:String!){
@@ -81,23 +81,38 @@ async function fetchViaGraphQL(token: string): Promise<ContributionsData | null>
     const cal = json?.data?.user?.contributionsCollection?.contributionCalendar;
     if (!cal || !Array.isArray(cal.weeks)) return null;
 
-    const total = cal.totalContributions ?? 0;
-    const weeks: ContribWeek[] = cal.weeks.map(
-      (w: { contributionDays: { date: string; contributionCount: number; contributionLevel: string }[] }) =>
-        w.contributionDays.map((d) => ({
-          date: d.date,
-          count: d.contributionCount,
-          level: LEVEL_MAP[d.contributionLevel] ?? 0,
-          displayDate: formatDisplayDate(d.date),
-        })),
+    const allDays: ContribDay[] = [];
+    cal.weeks.forEach(
+      (w: { contributionDays: { date: string; contributionCount: number; contributionLevel: string }[] }) => {
+        w.contributionDays.forEach((d) => {
+          allDays.push({
+            date: d.date,
+            count: d.contributionCount,
+            level: LEVEL_MAP[d.contributionLevel] ?? 0,
+            displayDate: formatDisplayDate(d.date),
+          });
+        });
+      },
     );
 
+    // Sort chronologically by date
+    allDays.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Group into 7-day weeks starting from Sunday
+    const weeks: ContribWeek[] = [];
+    for (let i = 0; i < allDays.length; i += 7) {
+      weeks.push(allDays.slice(i, i + 7));
+    }
+
+    const calculatedTotal = allDays.reduce((sum, day) => sum + day.count, 0);
     const months = parseMonthLabels(weeks);
+
     return {
-      total,
+      total: cal.totalContributions ?? calculatedTotal,
       weeks,
       months,
       lastSyncedAt: new Date().toISOString(),
+      source: "live",
     };
   } catch {
     return null;
@@ -106,7 +121,8 @@ async function fetchViaGraphQL(token: string): Promise<ContributionsData | null>
 
 /**
  * Direct HTML parser fetcher for GitHub contribution calendar.
- * Works server-side without an API token, parsing real GitHub contribution data.
+ * Extracts daily data points directly from GitHub profile HTML.
+ * Deduplicates and sorts all days chronologically by date string.
  */
 async function fetchViaHtml(): Promise<ContributionsData | null> {
   try {
@@ -132,7 +148,7 @@ async function fetchViaHtml(): Promise<ContributionsData | null> {
 
     // Match all contribution day cells
     const tdRegex = /<td[^>]*class="[^"]*ContributionCalendar-day[^"]*"[^>]*>/gi;
-    const allDays: ContribDay[] = [];
+    const daysMap = new Map<string, ContribDay>();
     let tdMatch;
 
     while ((tdMatch = tdRegex.exec(html)) !== null) {
@@ -143,6 +159,8 @@ async function fetchViaHtml(): Promise<ContributionsData | null> {
 
       if (dateMatch && levelMatch) {
         const date = dateMatch[1];
+        if (daysMap.has(date)) continue; // Deduplicate
+
         const level = (parseInt(levelMatch[1], 10) || 0) as 0 | 1 | 2 | 3 | 4;
         const id = idMatch ? idMatch[1] : "";
         const tipText = id ? tooltips.get(id) || "" : "";
@@ -153,7 +171,7 @@ async function fetchViaHtml(): Promise<ContributionsData | null> {
           count = countMatch[1].toLowerCase() === "no" ? 0 : parseInt(countMatch[1], 10);
         }
 
-        allDays.push({
+        daysMap.set(date, {
           date,
           count,
           level,
@@ -162,9 +180,13 @@ async function fetchViaHtml(): Promise<ContributionsData | null> {
       }
     }
 
+    const allDays = Array.from(daysMap.values());
     if (allDays.length === 0) return null;
 
-    // Group into 7-day weeks
+    // CRITICAL: Sort chronologically by YYYY-MM-DD
+    allDays.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Group into 7-day calendar weeks starting from Sunday
     const weeks: ContribWeek[] = [];
     for (let i = 0; i < allDays.length; i += 7) {
       weeks.push(allDays.slice(i, i + 7));
@@ -178,6 +200,7 @@ async function fetchViaHtml(): Promise<ContributionsData | null> {
       weeks,
       months,
       lastSyncedAt: new Date().toISOString(),
+      source: "live",
     };
   } catch {
     return null;
@@ -185,9 +208,8 @@ async function fetchViaHtml(): Promise<ContributionsData | null> {
 }
 
 /**
- * Server-side GitHub contribution calendar.
- * Uses GitHub GraphQL API if token is present, otherwise direct GitHub HTML calendar parsing.
- * Revalidated via Next.js ISR (20 minutes).
+ * Server-side GitHub contribution calendar fetcher.
+ * Validated, chronologically ordered, and cached with Next.js ISR (20 minutes).
  */
 export async function getContributions(): Promise<ContributionsData | null> {
   const token = process.env.GITHUB_TOKEN;

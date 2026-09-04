@@ -31,7 +31,7 @@ export type RepoSummary = {
 
 export type ContribDay = {
   date: string; // YYYY-MM-DD
-  count: number; // Exact count
+  count: number; // Exact verified count
   level: 0 | 1 | 2 | 3 | 4; // Visual intensity
   displayDate: string; // e.g. "Sep 4, 2026"
 };
@@ -48,6 +48,7 @@ export type ContributionsData = {
   weeks: ContribWeek[];
   months: MonthLabel[];
   lastSyncedAt: string;
+  source: "live" | "cached" | "fallback";
 };
 
 export type GitHubStats = {
