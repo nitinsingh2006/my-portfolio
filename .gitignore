@@ -16,6 +16,8 @@ next-env.d.ts
 *.pem
 .vercel
 *.tsbuildinfo
+scratch/
+*.log
 
 # debug
 npm-debug.log*
@@ -24,10 +26,4 @@ yarn-error.log*
 
 # env
 .env
-.env*.local
-
-# recovered raw bundles (kept locally for reference, not needed to build)
-# docs/_recovered/ is intentionally tracked for the recovery report
-
-.vercel
 .env*.local
