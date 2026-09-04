@@ -151,6 +151,11 @@ body {
   .animate-spin-slow {
     animation: spin-slow 16s linear infinite;
   }
+
+  .achievement-fallback-icon::before {
+    content: "🏆";
+    font-size: 1.75rem;
+  }
 }
 
 @keyframes float {

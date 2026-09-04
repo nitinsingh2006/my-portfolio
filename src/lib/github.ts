@@ -1,4 +1,10 @@
 import { site } from "@/data/site";
+import {
+  GitHubAchievement,
+  VERIFIED_ACHIEVEMENTS,
+  ACHIEVEMENT_CATALOG,
+  AchievementTier,
+} from "@/data/achievements";
 
 export type RepoSummary = {
   name: string;
@@ -24,6 +30,12 @@ export type GitHubStats = {
   topLanguages: { name: string; percent: number }[];
   latestRepos: RepoSummary[];
   ok: boolean;
+};
+
+export type GitHubAchievementData = {
+  achievements: GitHubAchievement[];
+  lastSyncedAt: string;
+  source: "live" | "verified-fallback";
 };
 
 const GITHUB_API = "https://api.github.com";
@@ -177,5 +189,75 @@ export async function getContributions(): Promise<Contributions | null> {
     return { total: cal.totalContributions ?? 0, weeks };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Synchronizes GitHub achievement state from GitHub profile HTML while maintaining
+ * verified fallback data. Cached via Next.js ISR (revalidate every 3600s / 1 hour).
+ * Never exposes secrets to the browser.
+ */
+export async function getGitHubAchievements(): Promise<GitHubAchievementData> {
+  const now = new Date().toISOString();
+  const fallbackResult: GitHubAchievementData = {
+    achievements: VERIFIED_ACHIEVEMENTS,
+    lastSyncedAt: now,
+    source: "verified-fallback",
+  };
+
+  try {
+    const res = await fetch(`https://github.com/${site.githubUser}?tab=achievements`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html",
+      },
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) {
+      return fallbackResult;
+    }
+
+    const html = await res.text();
+    const parsedAchievements: GitHubAchievement[] = [];
+
+    // Match achievement image links or badges from GitHub profile HTML
+    // GitHub profile achievement images follow pattern: assets/<slug>-<tier/hash>.png or alt="Achievement: <name>"
+    const imgRegex = /alt="Achievement:\s*([^"]+)"[^>]*src="([^"]+)"/g;
+    let match;
+
+    while ((match = imgRegex.exec(html)) !== null) {
+      const [, name, iconUrl] = match;
+      const slug = name.toLowerCase().replace(/\s+/g, "-");
+      const catalogMeta = ACHIEVEMENT_CATALOG[slug];
+
+      let tier: AchievementTier = "default";
+      if (iconUrl.includes("-bronze")) tier = "bronze";
+      else if (iconUrl.includes("-silver")) tier = "silver";
+      else if (iconUrl.includes("-gold")) tier = "gold";
+
+      parsedAchievements.push({
+        slug,
+        name: catalogMeta?.name ?? name,
+        description: catalogMeta?.description ?? `GitHub achievement: ${name}`,
+        tier,
+        iconUrl,
+        link: `https://github.com/${site.githubUser}?tab=achievements`,
+        verified: true,
+      });
+    }
+
+    if (parsedAchievements.length === 0) {
+      return fallbackResult;
+    }
+
+    return {
+      achievements: parsedAchievements,
+      lastSyncedAt: now,
+      source: "live",
+    };
+  } catch {
+    return fallbackResult;
   }
 }
