@@ -81,7 +81,7 @@ async function fetchViaGraphQL(token: string): Promise<ContributionsData | null>
     const cal = json?.data?.user?.contributionsCollection?.contributionCalendar;
     if (!cal || !Array.isArray(cal.weeks)) return null;
 
-    let total = cal.totalContributions ?? 0;
+    const total = cal.totalContributions ?? 0;
     const weeks: ContribWeek[] = cal.weeks.map(
       (w: { contributionDays: { date: string; contributionCount: number; contributionLevel: string }[] }) =>
         w.contributionDays.map((d) => ({

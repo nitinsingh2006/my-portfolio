@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ArrowUpRight, Calendar, Sparkles } from "lucide-react";
+import { ArrowUpRight, Calendar } from "lucide-react";
 import { site } from "@/data/site";
 import type { ContributionsData, ContribDay } from "@/lib/github/types";
 
