@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Github, Linkedin, Mail, FileText, MapPin } from "lucide-react";
 import { site } from "@/data/site";
 import type { GitHubStats } from "@/lib/github";
-import { RobotHero } from "./RobotHero";
+import { HeroPhoto } from "./HeroPhoto";
 
 const roles = ["Full-Stack Developer", "AI Engineer", "Rust + Tauri Builder", "Open-Source Maker"];
 
@@ -132,7 +132,7 @@ export function Hero({ stats }: { stats: GitHubStats }) {
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
             className="order-first lg:order-last"
           >
-            <RobotHero />
+            <HeroPhoto />
           </motion.div>
         </div>
 

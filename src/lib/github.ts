@@ -220,16 +220,21 @@ export async function getGitHubAchievements(): Promise<GitHubAchievementData> {
     }
 
     const html = await res.text();
-    const parsedAchievements: GitHubAchievement[] = [];
+    const parsedMap = new Map<string, GitHubAchievement>();
 
-    // Match achievement image links or badges from GitHub profile HTML
-    // GitHub profile achievement images follow pattern: assets/<slug>-<tier/hash>.png or alt="Achievement: <name>"
-    const imgRegex = /alt="Achievement:\s*([^"]+)"[^>]*src="([^"]+)"/g;
+    // Match achievement image elements from GitHub profile HTML flexible to attribute order
+    const imgTagRegex = /<img[^>]*alt=["']Achievement:\s*([^"']+)["'][^>]*>/gi;
     let match;
 
-    while ((match = imgRegex.exec(html)) !== null) {
-      const [, name, iconUrl] = match;
+    while ((match = imgTagRegex.exec(html)) !== null) {
+      const fullTag = match[0];
+      const name = match[1].trim();
+      const srcMatch = fullTag.match(/src=["']([^"']+)["']/i);
+      const iconUrl = srcMatch ? srcMatch[1] : "";
+      
       const slug = name.toLowerCase().replace(/\s+/g, "-");
+      if (parsedMap.has(slug)) continue;
+
       const catalogMeta = ACHIEVEMENT_CATALOG[slug];
 
       let tier: AchievementTier = "default";
@@ -237,16 +242,18 @@ export async function getGitHubAchievements(): Promise<GitHubAchievementData> {
       else if (iconUrl.includes("-silver")) tier = "silver";
       else if (iconUrl.includes("-gold")) tier = "gold";
 
-      parsedAchievements.push({
+      parsedMap.set(slug, {
         slug,
         name: catalogMeta?.name ?? name,
         description: catalogMeta?.description ?? `GitHub achievement: ${name}`,
         tier,
-        iconUrl,
+        iconUrl: iconUrl || catalogMeta?.defaultIconUrl || "",
         link: `https://github.com/${site.githubUser}?tab=achievements`,
         verified: true,
       });
     }
+
+    const parsedAchievements = Array.from(parsedMap.values());
 
     if (parsedAchievements.length === 0) {
       return fallbackResult;
